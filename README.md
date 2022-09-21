@@ -8,6 +8,6 @@ Group members:
 - [Aliakberova, Liliia](https://github.com/Liliia-Aliakberova)
 - [Gepalova, Arina](https://github.com/omymble)
 - [Lorencio Abril, Jose Antonio](https://github.com/Lorenc1o)
-- Mayorga Llano, Mariana
+- [Mayorga Llano, Mariana](https://github.com/marianamllano)
 
 Professor: Zimányi, Esteban
