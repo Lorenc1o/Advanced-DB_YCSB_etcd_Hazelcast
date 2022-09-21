@@ -5,9 +5,9 @@ Development of the *YCSB benchmark* for Key-Value stores to work with *etcd* and
 
 Group members:
 
-- Aliakberova, Liliia
-- Gepalova, Arina
-- Lorencio Abril, Jose Antonio
+- [Aliakberova, Liliia](https://github.com/Liliia-Aliakberova)
+- [Gepalova, Arina] (https://github.com/omymble)
+- [Lorencio Abril, Jose Antonio](https://github.com/Lorenc1o)
 - Mayorga Llano, Mariana
 
 Professor: Zimányi, Esteban
