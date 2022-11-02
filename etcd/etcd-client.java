@@ -74,6 +74,29 @@ public class Demo {
 			return 0;
 		}
 	}
+	
+	//TODO is it necessary to check existence?
+	public static int update(String table, String key, HashMap<String,String> values) {
+		ByteSequence fullkey = ByteSequence.fromString(table+"."+key);
+        GetOption option = GetOption.newBuilder().withPrefix(fullkey).build();
+		try {
+			return kvClient.get(fullkey, option).get().getCount() > 0 ? insert(table, key, values) : 0;
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+			return 0;
+		} catch (ExecutionException e) {
+			e.printStackTrace();
+			return 0;
+		}
+	}
+	
+	public static int scan(String table, String startkey, 
+			int recordcount, Set<String> fields, 
+			Vector<HashMap<String,String>> result) {
+		//TODO implement this
+		return 0;
+	}
+
 
 //Main function for testing
     public static void main(String[] args) throws ExecutionException, InterruptedException {
@@ -100,6 +123,7 @@ public class Demo {
         
         result = new HashMap<String,String>();
         System.out.println(read(table,key,fields,result));
+        //TODO test update and scan       
   }
 
 }
