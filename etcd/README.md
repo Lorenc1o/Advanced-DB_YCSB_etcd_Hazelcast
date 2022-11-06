@@ -19,7 +19,7 @@ LICENSE file.
 
 This section describes how to run YCSB on etcd. 
 
-### 1. Start etcd
+### 1. Install (if needed) and start etcd
 
 ### 2. Install Java and Maven
 
