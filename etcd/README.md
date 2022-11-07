@@ -48,7 +48,7 @@ Set host, port, password, and cluster mode in the workload you plan to run.
 
 At the moment, the connection is made with the localhost and to the port 2379.
 
-### 5. Load data and run tests (This is not working now)
+### 5. Load data and run tests
 
 First, you need to go to YCSB/bin/ycsb and to the list DATABASES add:
 	["etcd": "site.ycsb.db.EtcdClient",]
