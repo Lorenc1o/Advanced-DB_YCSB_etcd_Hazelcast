@@ -31,11 +31,12 @@ Git clone YCSB and compile:
     cd YCSB
     
 Copy the folder etcd into YCSB and add the version and the binding to the pom.xml. Add the following lines
-Inside <properties>:
-    <etcd.version>[version]</etcd.version>
+
+Inside \<properties\>:
+    \<etcd.version\>[version]\</etcd.version\>
     
-Inside <modules>:
-    <module>etcd</module>
+Inside \<modules\>:
+    \<module\>etcd\</module\>
     
 Compile the module:
 
