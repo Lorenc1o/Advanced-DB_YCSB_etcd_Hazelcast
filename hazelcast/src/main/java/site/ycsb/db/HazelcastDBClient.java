@@ -1,4 +1,4 @@
-package site.ycsb.db.hazelcast;
+package site.ycsb.db;
 
 import site.ycsb.DB;
 import site.ycsb.DBException;
