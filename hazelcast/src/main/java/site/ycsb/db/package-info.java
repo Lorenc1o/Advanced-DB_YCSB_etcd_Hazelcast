@@ -16,7 +16,7 @@
  */
 
 /**
- * The YCSB binding for <a href="https://www.arangodb.com/">ArangoDB</a>.
+ * The YCSB binding for <a href="https://hazelcast.com/">Hazelcast</a>.
  */
-package site.ycsb.db.hazelcast;
+package site.ycsb.db;
 

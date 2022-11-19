@@ -1,5 +1,10 @@
 package site.ycsb.db.hazelcast;
 
+import site.ycsb.DB;
+import site.ycsb.DBException;
+import site.ycsb.ByteIterator;
+import site.ycsb.StringByteIterator;
+import site.ycsb.Status;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -15,22 +20,28 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 /**
- * bullshit.
+ * YCSB binding for <a href="https://hazelcast.com/">hazelcast</a>.
+ *
+ * See {@code hazelcast/README.md} for details.
  */
-
-public class HazelcastDBClient {
+public class HazelcastDBClient extends DB{
   private static HazelcastInstance hz;
   private boolean async = false;
 
-  public static void init() {
-    HazelcastInstance hzl = HazelcastClient.newHazelcastClient();
+  @Override
+  public void init() throws DBException{
+    hz = HazelcastClient.newHazelcastClient();
   }
 
-  public static int read(String table, String key, Set<String> fields, HashMap<String, String> result) {
+  @Override
+  public Status int read(String table, String key, Set<String> fields, HashMap<String, ByteIterator> result) {
     ConcurrentMap<String, Map<String, String>> distributedMap = hz.getMap(table);
-    Map<String, String> resultMap = distributedMap.get(key);
+    Map<String, ByteIterator> resultMap = distributedMap.get(key);
     result.putAll(resultMap);
-    return 1;
+    if(result.isEmpty()) {
+      return Status.ERROR;
+    }
+    return Status.OK;
   }
 
   public static int insert(String table, String key, HashMap<String, String> values)
