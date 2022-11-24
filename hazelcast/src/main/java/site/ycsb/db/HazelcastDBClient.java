@@ -1,4 +1,4 @@
-package site.ycsb.db.hazelcast;
+package site.ycsb.db;
 
 import site.ycsb.DB;
 import site.ycsb.DBException;
@@ -10,10 +10,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentMap;
-import com.hazelcast.client.HazelcastClient;
+import com.hazelcast.config.Config;
+import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.map.IMap;
-import java.util.concurrent.Future;
 
 /**
  * YCSB binding for <a href="https://hazelcast.com/">hazelcast</a>.
@@ -22,54 +22,82 @@ import java.util.concurrent.Future;
  */
 public class HazelcastDBClient extends DB{
   private static HazelcastInstance hz;
-  private boolean async = false;
 
+  @Override
   public void init() throws DBException{
-    hz = HazelcastClient.newHazelcastClient();
+    Config confYCSB = new Config();
+    confYCSB.setClusterName("YCSB-hz");
+    hz = Hazelcast.newHazelcastInstance(confYCSB);
   }
 
   @Override
   public Status read(String table, String key, Set<String> fields, Map<String, ByteIterator> result) {
-    IMap<String, HashMap<String, String>> map = hz.getMap(table);
-    Map<String, String> resultMap = map.get(key);
-    StringByteIterator.putAllAsByteIterators(result, resultMap);
-    return Status.OK;
+    try{
+      IMap<String, Map<String, String>> myMap = hz.getMap(table);
+      Map<String, String> resultMap = myMap.get(key);
+      if(fields != null){
+        for(String f : fields) {
+          result.put(f, new StringByteIterator(resultMap.get(f)));
+        }
+      } else {
+        for(Map.Entry<String, String> entry : resultMap.entrySet()) {
+          result.put(entry.getKey(), new StringByteIterator(entry.getValue()));
+        }
+      }
+      return result.isEmpty() ? Status.ERROR : Status.OK;
+    } catch (Exception e) {
+      e.printStackTrace();
+      return Status.ERROR;
+    }
   }
+
   @Override
   public Status insert(String table, String key, Map<String, ByteIterator> values){
     Map<String, String> strValues = StringByteIterator.getStringMap(values);
-    IMap<String, Map<String, String>> distributedMap = hz.getMap(table);
-    Future<Map<String, String>> future = (Future<Map<String, String>>) distributedMap.putAsync(key, strValues);
-    return Status.OK;
+    IMap<String, Map<String, String>> myMap = hz.getMap(table);
+    try{
+      myMap.put(key, strValues);
+      return Status.OK;
+    }catch(Exception e){
+      e.printStackTrace();
+      return Status.ERROR;
+    }
   }
+
   @Override
   public Status delete(String table, String key) {
-    ConcurrentMap<String, Map<String, String>> distributedMap = hz.getMap(table);
-    distributedMap.remove(key);
-    return Status.OK;
+    ConcurrentMap<String, Map<String, String>> myMap = hz.getMap(table);
+    try{
+      myMap.remove(key);
+      return Status.OK;
+    }catch(Exception e){
+      e.printStackTrace();
+      return Status.ERROR;
+    }
   }
   
   @Override
   public Status update(String table, String key, Map<String, ByteIterator> values){
-    IMap<String, Map<String, String>> distributedMap = hz.getMap(table);
-    if (values != null && values.size() > 0) {
-      Map<String, String> resultMap = distributedMap.get(key);
-      StringByteIterator.putAllAsStrings(resultMap, values);
-      Future<Map<String, String>> future = (Future<Map<String, String>>) distributedMap.putAsync(key, resultMap);
-    }
-    return Status.OK;
+    return insert(table, key, values);
   }
-
+  
   @Override
   public Status scan(String table, String startkey, int recordcount,
       Set<String> fields, Vector<HashMap<String, ByteIterator>> result) {
-    String key;
-    for (int i = 0; i < recordcount; i++) {
-      key = startkey + i;
-      if (read(table, key, fields, result.get(i)) == Status.ERROR) {
-        return Status.ERROR;
+    IMap<String, Map<String, String>> myMap = hz.getMap(table);
+    int count = 0;
+    for (String key : myMap.keySet()) {
+      if(count >= recordcount){
+        break;
+      }
+      if(key.compareTo(startkey) >= 0){
+        count++;
+        HashMap<String, ByteIterator> values = new HashMap<String, ByteIterator>();
+        Map<String, String> res = myMap.get(key);
+        StringByteIterator.putAllAsByteIterators(values, res);
+        result.add(values);
       }
     }
-    return Status.OK;
+    return result.isEmpty() ? Status.ERROR : Status.OK;
   }
 }
