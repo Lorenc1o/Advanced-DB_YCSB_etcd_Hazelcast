@@ -36,15 +36,24 @@ public class EtcdClient extends DB{
   
   @Override
   public Status read(String table, String key, Set<String> fields, Map<String, ByteIterator> result){
+    if(table==""){
+      table="usertable";
+    }
+    CompletableFuture<GetResponse> futureResponse = new CompletableFuture<GetResponse>();
     try {
-      for(String f : fields) {
-        CompletableFuture<GetResponse> futureResponse = 
-            kvClient.get(ByteSequence.fromString(table + "." + key + "." + f));
-        GetResponse response = futureResponse.get();
-        for(KeyValue kv:response.getKvs()){
-          result.put(kv.getKey().toString(), new StringByteIterator(kv.getValue().toString()));
+      if(fields != null){
+        for(String f : fields) {
+          futureResponse = kvClient.get(ByteSequence.fromString(table + "." + key + "." + f));
         }
+      }else{
+        ByteSequence fullkey = ByteSequence.fromString(table+"."+key);
+        GetOption option = GetOption.newBuilder().withPrefix(fullkey).build();
+        futureResponse = kvClient.get(fullkey, option);
       }
+      GetResponse response = futureResponse.get();
+      for(KeyValue kv:response.getKvs()){
+        result.put(kv.getKey().toString(), new StringByteIterator(kv.getValue().toString()));
+      }      
       return result.isEmpty() ? Status.ERROR : Status.OK;
     } catch (InterruptedException e) {
       e.printStackTrace();
@@ -77,6 +86,9 @@ public class EtcdClient extends DB{
   
   @Override
   public Status delete(String table, String key) {
+    if(table==""){
+      table="usertable";
+    }
     ByteSequence fullkey = ByteSequence.fromString(table+"."+key);
     DeleteOption option = DeleteOption.newBuilder().withPrefix(fullkey).build();
     
@@ -91,7 +103,6 @@ public class EtcdClient extends DB{
     }
   }
   
-  //TODO is it necessary to check existence?
   @Override
   public Status update(String table, String key, Map<String, ByteIterator> values) {
     ByteSequence fullkey = ByteSequence.fromString(table+"."+key);
@@ -111,15 +122,27 @@ public class EtcdClient extends DB{
   public Status scan(String table, String startkey, 
       int recordcount, Set<String> fields, 
       Vector<HashMap<String, ByteIterator>> result) {
-    String key;
-    for(int i=0; i<recordcount; i++) {
-      key = startkey + i;
-      if(read(table, key, fields, result.get(i))==Status.ERROR){
-        return Status.ERROR;
+    ByteSequence fullkey = ByteSequence.fromString(table+"."+startkey);
+    GetOption option = GetOption.newBuilder().withLimit(recordcount).withPrefix(fullkey).build();
+    try {
+      GetResponse response = kvClient.get(fullkey, option).get();
+      for(KeyValue kv:response.getKvs()){
+        HashMap<String, ByteIterator> map = new HashMap<String, ByteIterator>();
+        map.put(kv.getKey().toString(), new StringByteIterator(kv.getValue().toString()));
+        result.add(map);
       }
+      return result.isEmpty() ? Status.ERROR : Status.OK;
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+      return Status.ERROR;
+    } catch (ExecutionException e) {
+      e.printStackTrace();
+      return Status.ERROR;
     }
-    return Status.OK;
+  }
+
+  @Override
+  public void cleanup(){   
+    client.close();
   }
 }
-
-
