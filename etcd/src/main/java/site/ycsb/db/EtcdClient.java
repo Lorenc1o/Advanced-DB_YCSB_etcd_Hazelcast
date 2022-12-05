@@ -62,8 +62,6 @@ public class EtcdClient extends DB{
       e.printStackTrace();
       return Status.ERROR;
     }
-    //return result.isEmpty() ? Status.ERROR : Status.OK;
-
   }
   
   @Override
@@ -131,7 +129,7 @@ public class EtcdClient extends DB{
         map.put(kv.getKey().toString(), new StringByteIterator(kv.getValue().toString()));
         result.add(map);
       }
-      return result.isEmpty() ? Status.ERROR : Status.OK;
+      return Status.OK;
     } catch (InterruptedException e) {
       e.printStackTrace();
       return Status.ERROR;

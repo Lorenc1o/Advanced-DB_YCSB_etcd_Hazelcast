@@ -32,6 +32,9 @@ public class HazelcastDBClient extends DB{
 
   @Override
   public Status read(String table, String key, Set<String> fields, Map<String, ByteIterator> result) {
+    if(table==""){
+      table="usertable";
+    }
     try{
       IMap<String, Map<String, String>> myMap = hz.getMap(table);
       Map<String, String> resultMap = myMap.get(key);
@@ -39,12 +42,12 @@ public class HazelcastDBClient extends DB{
         for(String f : fields) {
           result.put(f, new StringByteIterator(resultMap.get(f)));
         }
-      } else {
+      } else if(resultMap != null){
         for(Map.Entry<String, String> entry : resultMap.entrySet()) {
           result.put(entry.getKey(), new StringByteIterator(entry.getValue()));
         }
       }
-      return result.isEmpty() ? Status.ERROR : Status.OK;
+      return Status.OK;
     } catch (Exception e) {
       e.printStackTrace();
       return Status.ERROR;
@@ -86,18 +89,24 @@ public class HazelcastDBClient extends DB{
       Set<String> fields, Vector<HashMap<String, ByteIterator>> result) {
     IMap<String, Map<String, String>> myMap = hz.getMap(table);
     int count = 0;
-    for (String key : myMap.keySet()) {
-      if(count >= recordcount){
-        break;
+    try{
+      for (String key : myMap.keySet()) {
+        if(count >= recordcount){
+          break;
+        }
+        if(key.compareTo(startkey) >= 0){
+          count++;
+          HashMap<String, ByteIterator> values = new HashMap<String, ByteIterator>();
+          Map<String, String> res = myMap.get(key);
+          StringByteIterator.putAllAsByteIterators(values, res);
+          result.add(values);
+        }
       }
-      if(key.compareTo(startkey) >= 0){
-        count++;
-        HashMap<String, ByteIterator> values = new HashMap<String, ByteIterator>();
-        Map<String, String> res = myMap.get(key);
-        StringByteIterator.putAllAsByteIterators(values, res);
-        result.add(values);
-      }
+      return Status.OK;
+    } catch(Exception e){
+      e.printStackTrace();
+      return Status.ERROR;
     }
-    return result.isEmpty() ? Status.ERROR : Status.OK;
   }
 }
+
