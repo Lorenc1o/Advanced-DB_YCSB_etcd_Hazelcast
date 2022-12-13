@@ -11,3 +11,11 @@ Group members:
 - [Mayorga Llano, Mariana](https://github.com/marianamllano)
 
 Professor: Zimányi, Esteban
+
+In the directory *etcd*, the development of the implementation of this tool to extend the YCSB DB class is done, and the instructions for its usage can be read.
+
+In the directory *hazelcast*, the development of the implementation of this tool to extend the YCSB DB class is done, and the instructions for its usage can be read.
+
+In the directory *results*, the raw results of our tests can be consulted.
+
+The file *workload_custom_32000_100000* shows how our custom workload can be defined with the YCSB workload_template.
